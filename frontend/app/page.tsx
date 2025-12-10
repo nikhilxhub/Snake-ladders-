@@ -3,7 +3,7 @@ import { BackgroundPaths } from "@/components/ui/background-paths";
 export default function Home() {
   return (
     <main>
-      <BackgroundPaths title="Snake & Ladders" />
+      <BackgroundPaths title="Stake & Ladders" />
     </main>
   );
 }

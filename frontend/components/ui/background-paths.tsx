@@ -110,7 +110,7 @@ export function BackgroundPaths({
                         transition={{ delay: 1, duration: 1 }}
                         className="text-lg md:text-xl text-neutral-300 mb-8 max-w-2xl mx-auto"
                     >
-                        Multiplayer Snake & Ladders where players pay a small fee every time they roll. Fees go into a common pot (escrow). Winner receives the full pot.
+                        🎲 Stake, Roll, Win – The Future of Snakes & Ladders! 🪜🐍
                         <br />
                         <span className="text-sm text-neutral-500 mt-2 block">
                             Provably random rolls • Trustless payments • Authoritative state
@@ -131,7 +131,7 @@ export function BackgroundPaths({
                             hover:shadow-md hover:shadow-neutral-800/50"
                         >
                             <span className="opacity-90 group-hover:opacity-100 transition-opacity"
-                                onClick={()=>{
+                                onClick={() => {
                                     router.push("/home")
                                 }}
                             >
