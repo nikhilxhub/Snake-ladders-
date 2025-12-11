@@ -1,9 +1,16 @@
-import React from 'react'
+"use client";
 
-const page = () => {
+import { BackgroundCircles } from "@/components/ui/background-circles";
+
+export default function GamePage() {
   return (
-    <div>page</div>
-  )
+    <div className="relative w-full h-screen">
+      <BackgroundCircles
+        actionLabel="Create Game"
+        description="Stake, Roll, Win."
+        variant="octonary"
+      />
+      {/* Add your game components here */}
+    </div>
+  );
 }
-
-export default page

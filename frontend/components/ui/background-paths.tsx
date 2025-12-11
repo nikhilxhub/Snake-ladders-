@@ -132,7 +132,7 @@ export function BackgroundPaths({
                         >
                             <span className="opacity-90 group-hover:opacity-100 transition-opacity"
                                 onClick={() => {
-                                    router.push("/home")
+                                    router.push("/game")
                                 }}
                             >
                                 Start Game
