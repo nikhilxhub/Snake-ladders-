@@ -151,7 +151,7 @@ export function BackgroundCircles({
             </motion.div>
 
             <motion.div
-                className="relative z-10 text-center"
+                className="relative z-10 text-center hover"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
@@ -175,7 +175,7 @@ export function BackgroundCircles({
                             className={clsx(
                                 "text-5xl font-bold tracking-tight md:text-7xl",
                                 "text-white hover:bg-transparent hover:text-white/90",
-                                "h-auto p-0",
+                                "h-auto p-0 cursor-pointer transition-transform hover:scale-105 duration-200",
                                 "drop-shadow-[0_0_32px_rgba(94,234,212,0.4)]"
                             )}
                             onClick={onAction}
