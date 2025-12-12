@@ -37,7 +37,7 @@ export function Navbar() {
             <div className="hidden md:flex items-center space-x-8">
                 <NavLink href="/home" label="Home" />
                 <NavLink href="/game" label="Play" />
-                <NavLink href="/leaderboard" label="Leaderboard" />
+                <NavLink href="/join" label="Join Game" />
             </div>
 
             <div className="flex items-center gap-4">

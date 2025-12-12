@@ -7,14 +7,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Users, Coins, ShieldCheck, Trophy, Zap, XIcon } from "lucide-react";
 
+import { useWallet } from "@solana/wallet-adapter-react";
+import { toast } from "sonner";
+
 export default function GamePage() {
   const [isCreateGameOpen, setIsCreateGameOpen] = useState(false);
+  const { connected } = useWallet();
+
+  const handleCreateGame = () => {
+    if (!connected) {
+      toast.error("Connect wallet first to create game");
+      return;
+    }
+    setIsCreateGameOpen(true);
+  };
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
       <BackgroundCircles
         actionLabel="Create Game"
-        onAction={() => setIsCreateGameOpen(true)}
+        onAction={handleCreateGame}
         description="Stake, Roll, Win."
         variant="octonary"
       />

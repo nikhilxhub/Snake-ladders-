@@ -135,7 +135,7 @@ export function BackgroundPaths({
                                     router.push("/game")
                                 }}
                             >
-                                Start Game
+                                Enter
                             </span>
                             <span
                                 className="ml-3 opacity-70 group-hover:opacity-100 group-hover:translate-x-1.5 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Navbar } from "@/components/ui/navbar";
+
 import { Button } from "@/components/ui/button";
 
 import { Users, ShieldCheck, Trophy, ArrowRight, Wallet, Lock, Clock, Activity } from "lucide-react";
@@ -20,7 +20,7 @@ export default function Page() {
       {/* Main Content Box */}
       <div className="relative z-10 w-full max-w-[1480px] border-x border-white/10 bg-black/40 min-h-screen shadow-2xl">
 
-        <Navbar />
+
 
         <main className="flex flex-col items-center w-full pt-20">
 
