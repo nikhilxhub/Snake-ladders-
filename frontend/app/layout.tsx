@@ -19,7 +19,7 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "Stake & Ladders | Web3 Multiplayer Game",
-  description: "The world’s first blockchain-powered Snakes & Ladders game. Provably fair and winner takes all.",
+  description: "The world's first blockchain-powered Snakes & Ladders game. Provably fair and winner takes all.",
 };
 
 export default function RootLayout({

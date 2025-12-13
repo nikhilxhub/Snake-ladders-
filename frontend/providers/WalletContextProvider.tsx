@@ -12,7 +12,13 @@ import "@solana/wallet-adapter-react-ui/styles.css";
 
 export const WalletContextProvider: FC<{ children: ReactNode }> = ({ children }) => {
   // Can be set to 'devnet', 'testnet', or 'mainnet-beta'
-  const network = "https://solana-devnet.g.alchemy.com/v2/vNiyuieL-QhxDchV_hvLz";
+  // const network = process.env.NEXT_PUBLIC_SOLANA_DEVNET as string;
+  // const network = process.env.NEXT_PUBLIC_SOLANA_TESTNET || "http://127.0.0.1:8899";
+  const network = process.env.NEXT_PUBLIC_SOLANA_DEVNET || "https://solana-devnet.g.alchemy.com/v2/vNiyuieL-QhxDchV_hvLz";
+
+  // Debug log to verify endpoint
+  console.log("WalletContextProvider using endpoint:", network);
+
   const endpoint = useMemo(() => network, [network]);
 
 

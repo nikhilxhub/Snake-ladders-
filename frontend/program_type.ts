@@ -1,14 +1,20 @@
-{
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/snake_ladders_program.json`.
+ */
+export type SnakeLaddersProgram = {
   "address": "aASgAk1s5KbAMPsiLTkeuA3k1ebTammftXpsP96QB3T",
   "metadata": {
-    "name": "snake_ladders_program",
+    "name": "snakeLaddersProgram",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
   "instructions": [
     {
-      "name": "claim_prize",
+      "name": "claimPrize",
       "discriminator": [
         157,
         233,
@@ -30,14 +36,14 @@
           "writable": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "consume_randomness",
+      "name": "consumeRandomness",
       "discriminator": [
         190,
         217,
@@ -50,7 +56,7 @@
       ],
       "accounts": [
         {
-          "name": "vrf_program_identity",
+          "name": "vrfProgramIdentity",
           "address": "9irBy75QS2BN81FUgXuHcjqceJJRuc9oDkAe8TKVvvAw"
         },
         {
@@ -58,7 +64,7 @@
           "writable": true
         },
         {
-          "name": "instructions_sysvar",
+          "name": "instructionsSysvar",
           "address": "Sysvar1nstructions1111111111111111111111111"
         }
       ],
@@ -75,7 +81,7 @@
       ]
     },
     {
-      "name": "create_game",
+      "name": "createGame",
       "discriminator": [
         124,
         69,
@@ -112,19 +118,19 @@
               },
               {
                 "kind": "arg",
-                "path": "game_id"
+                "path": "gameId"
               }
             ]
           }
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "game_id",
+          "name": "gameId",
           "type": {
             "array": [
               "u8",
@@ -133,21 +139,21 @@
           }
         },
         {
-          "name": "max_players",
+          "name": "maxPlayers",
           "type": "u8"
         },
         {
-          "name": "entry_fee_lamports",
+          "name": "entryFeeLamports",
           "type": "u64"
         },
         {
-          "name": "roll_fee_lamports",
+          "name": "rollFeeLamports",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "deposit_fee",
+      "name": "depositFee",
       "discriminator": [
         11,
         51,
@@ -169,7 +175,7 @@
           "writable": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -181,7 +187,7 @@
       ]
     },
     {
-      "name": "join_game",
+      "name": "joinGame",
       "discriminator": [
         107,
         112,
@@ -203,14 +209,14 @@
           "writable": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": []
     },
     {
-      "name": "pass_turn",
+      "name": "passTurn",
       "discriminator": [
         224,
         215,
@@ -235,7 +241,7 @@
       "args": []
     },
     {
-      "name": "request_roll",
+      "name": "requestRoll",
       "discriminator": [
         98,
         118,
@@ -257,23 +263,23 @@
           "writable": true
         },
         {
-          "name": "oracle_queue",
+          "name": "oracleQueue",
           "writable": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "client_seed",
+          "name": "clientSeed",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "start_game",
+      "name": "startGame",
       "discriminator": [
         249,
         47,
@@ -300,7 +306,7 @@
   ],
   "accounts": [
     {
-      "name": "Game",
+      "name": "game",
       "discriminator": [
         27,
         90,
@@ -316,98 +322,98 @@
   "errors": [
     {
       "code": 6000,
-      "name": "TooManyPlayers",
+      "name": "tooManyPlayers",
       "msg": "Too many players"
     },
     {
       "code": 6001,
-      "name": "GameFinished",
+      "name": "gameFinished",
       "msg": "Game is already finished"
     },
     {
       "code": 6002,
-      "name": "GameFull",
+      "name": "gameFull",
       "msg": "Game is full"
     },
     {
       "code": 6003,
-      "name": "AlreadyJoined",
+      "name": "alreadyJoined",
       "msg": "Player already joined"
     },
     {
       "code": 6004,
-      "name": "Unauthorized",
-      "msg": "Unauthorized"
+      "name": "unauthorized",
+      "msg": "unauthorized"
     },
     {
       "code": 6005,
-      "name": "UnauthorizedER",
+      "name": "unauthorizedEr",
       "msg": "ER signer not authorized"
     },
     {
       "code": 6006,
-      "name": "InvalidNonce",
+      "name": "invalidNonce",
       "msg": "Invalid nonce"
     },
     {
       "code": 6007,
-      "name": "InvalidWinner",
+      "name": "invalidWinner",
       "msg": "Invalid winner"
     },
     {
       "code": 6008,
-      "name": "NoPlayers",
+      "name": "noPlayers",
       "msg": "No players in game"
     },
     {
       "code": 6009,
-      "name": "InvalidTurnIndex",
+      "name": "invalidTurnIndex",
       "msg": "Invalid turn index"
     },
     {
       "code": 6010,
-      "name": "NotYourTurn",
+      "name": "notYourTurn",
       "msg": "Not your turn"
     },
     {
       "code": 6011,
-      "name": "NonceOverflow",
+      "name": "nonceOverflow",
       "msg": "Nonce overflow"
     },
     {
       "code": 6012,
-      "name": "InvalidMover",
+      "name": "invalidMover",
       "msg": "Mover is not in game"
     },
     {
       "code": 6013,
-      "name": "MoverMismatch",
+      "name": "moverMismatch",
       "msg": "Mover mismatch with pending"
     },
     {
       "code": 6014,
-      "name": "GameAlreadyStarted",
+      "name": "gameAlreadyStarted",
       "msg": "Game has already started, cannot join now"
     },
     {
       "code": 6015,
-      "name": "GameNotStarted",
+      "name": "gameNotStarted",
       "msg": "Game has not started yet"
     },
     {
       "code": 6016,
-      "name": "InvalidVrfProgram",
+      "name": "invalidVrfProgram",
       "msg": "Invalid VRF Program ID"
     },
     {
       "code": 6017,
-      "name": "GameNotFinished",
+      "name": "gameNotFinished",
       "msg": "Game is not finished yet"
     }
   ],
   "types": [
     {
-      "name": "Game",
+      "name": "game",
       "type": {
         "kind": "struct",
         "fields": [
@@ -416,7 +422,7 @@
             "type": "pubkey"
           },
           {
-            "name": "game_id",
+            "name": "gameId",
             "type": {
               "array": [
                 "u8",
@@ -425,7 +431,7 @@
             }
           },
           {
-            "name": "max_players",
+            "name": "maxPlayers",
             "type": "u8"
           },
           {
@@ -444,34 +450,34 @@
             }
           },
           {
-            "name": "entry_fee_lamports",
+            "name": "entryFeeLamports",
             "type": "u64"
           },
           {
-            "name": "roll_fee_lamports",
+            "name": "rollFeeLamports",
             "type": "u64"
           },
           {
-            "name": "total_pot",
+            "name": "totalPot",
             "type": "u64"
           },
           {
-            "name": "current_turn_index",
+            "name": "currentTurnIndex",
             "type": "u8"
           },
           {
-            "name": "turn_nonce",
+            "name": "turnNonce",
             "type": "u64"
           },
           {
-            "name": "win_position",
+            "name": "winPosition",
             "type": "u8"
           },
           {
             "name": "state",
             "type": {
               "defined": {
-                "name": "GameState"
+                "name": "gameState"
               }
             }
           },
@@ -486,7 +492,7 @@
             }
           },
           {
-            "name": "last_anchor",
+            "name": "lastAnchor",
             "type": {
               "array": [
                 "u8",
@@ -499,7 +505,7 @@
             "type": "u8"
           },
           {
-            "name": "map_from",
+            "name": "mapFrom",
             "type": {
               "array": [
                 "u8",
@@ -508,7 +514,7 @@
             }
           },
           {
-            "name": "map_to",
+            "name": "mapTo",
             "type": {
               "array": [
                 "u8",
@@ -517,11 +523,11 @@
             }
           },
           {
-            "name": "map_len",
+            "name": "mapLen",
             "type": "u8"
           },
           {
-            "name": "pending_player",
+            "name": "pendingPlayer",
             "type": {
               "option": "pubkey"
             }
@@ -530,21 +536,21 @@
       }
     },
     {
-      "name": "GameState",
+      "name": "gameState",
       "type": {
         "kind": "enum",
         "variants": [
           {
-            "name": "Created"
+            "name": "created"
           },
           {
-            "name": "Started"
+            "name": "started"
           },
           {
-            "name": "Finished"
+            "name": "finished"
           }
         ]
       }
     }
   ]
-}
+};
