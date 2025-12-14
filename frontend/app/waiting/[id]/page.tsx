@@ -155,6 +155,15 @@ export default function WaitingRoomPage() {
     }
   };
 
+  const handleCopy = () => {
+    if (!gameId) return;
+    navigator.clipboard.writeText(gameId);
+    setCopied(true);
+    toast.success("Room address copied!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+
   // Auto-Redirect on Game Start
   React.useEffect(() => {
     if (gameAccount?.state?.started) {
@@ -205,7 +214,7 @@ export default function WaitingRoomPage() {
           <div className="flex items-center justify-center gap-4">
             <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 font-mono text-sm">
               <span className="truncate max-w-[200px]">{gameId}</span>
-              <button className="hover:text-white transition-colors">
+              <button className="hover:text-white transition-colors" onClick={handleCopy}>
                 {copied ? <ShieldCheck className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
