@@ -194,8 +194,8 @@ export function BackgroundCircles({
                     {description}
                     <span className="mx-3 opacity-50">·</span>
                     Solana
-                    <span className="mx-3 opacity-50">·</span>
-                    Magic Blocks
+                    <span className="mx-3 opacity-50"></span>
+                
                 </motion.p>
 
             </motion.div>

@@ -1,7 +1,7 @@
 {
-  "address": "aASgAk1s5KbAMPsiLTkeuA3k1ebTammftXpsP96QB3T",
+  "address": "AKyrBmNVw7iAjz9GJ5GkZui2UDtF1VBHnp82pqqvV7qb",
   "metadata": {
-    "name": "snake_ladders_program",
+    "name": "ladders",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
@@ -35,44 +35,6 @@
         }
       ],
       "args": []
-    },
-    {
-      "name": "consume_randomness",
-      "discriminator": [
-        190,
-        217,
-        49,
-        162,
-        99,
-        26,
-        73,
-        234
-      ],
-      "accounts": [
-        {
-          "name": "vrf_program_identity",
-          "address": "9irBy75QS2BN81FUgXuHcjqceJJRuc9oDkAe8TKVvvAw"
-        },
-        {
-          "name": "game",
-          "writable": true
-        },
-        {
-          "name": "instructions_sysvar",
-          "address": "Sysvar1nstructions1111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "randomness",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        }
-      ]
     },
     {
       "name": "create_game",
@@ -257,20 +219,11 @@
           "writable": true
         },
         {
-          "name": "oracle_queue",
-          "writable": true
-        },
-        {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "client_seed",
-          "type": "u64"
-        }
-      ]
+      "args": []
     },
     {
       "name": "start_game",

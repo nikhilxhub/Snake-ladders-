@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { motion, AnimatePresence, useSpring, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
 import { useConnection, useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
@@ -11,11 +11,7 @@ import { toast } from "sonner";
 import { BN } from "@coral-xyz/anchor";
 import { Loader2 } from "lucide-react";
 
-// Placeholder - User needs to replace this if using Devnet/Localnet with specific Queue
-// For Devnet MagicBlock: often "A43DyUGA7s8eXPxqEjJY6EBu1KKbNgvxF8hef76skUpM" but varies.
-// We'll use a dummy or try to parse from ENV if available.
-// const ORACLE_QUEUE_PUBKEY = new PublicKey("A43DyUGA7s8eXPxqEjJY6EBu1KKbNgvxF8hef76skUpM"); // Old
-const ORACLE_QUEUE_PUBKEY = new PublicKey("Cuj97ggrhhidhbu39TijNVqE74xvKJ69gDervRUXAxGh"); // Correct Devnet Queue from Screenshot
+// VRF Removed - Using Pseudo-randomness on chain as per update
 
 // Floating Paths Background Component
 function FloatingPaths({ position }: { position: number }) {
@@ -61,6 +57,18 @@ function FloatingPaths({ position }: { position: number }) {
     );
 }
 
+// Animated Counter Component
+function AnimatedCounter({ value }: { value: number }) {
+    const spring = useSpring(value, { mass: 0.8, stiffness: 75, damping: 15 });
+    const display = useTransform(spring, (current) => current.toFixed(9));
+
+    useEffect(() => {
+        spring.set(value);
+    }, [spring, value]);
+
+    return <motion.span>{display}</motion.span>;
+}
+
 export default function BoardPage() {
     const params = useParams();
     const gameId = params?.id as string;
@@ -73,6 +81,13 @@ export default function BoardPage() {
     const [gameAccount, setGameAccount] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [diceValue, setDiceValue] = useState(0);
+
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    useEffect(() => {
+        // Initialize audio once
+        audioRef.current = new Audio("/DICE_ROLLING_SOUND.mp3");
+    }, []);
 
     // Fetch Game Data
     const fetchGameData = useCallback(async () => {
@@ -116,39 +131,52 @@ export default function BoardPage() {
         if (!gameAccount || !anchorWallet || !publicKey) return;
         try {
             setIsLoading(true);
+
+            // Play Sound via Log
+            if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+                audioRef.current.play().catch(e => console.error("Audio playback error:", e));
+            } else {
+                console.warn("Audio ref not initialized, trying to create new");
+                const tempAudio = new Audio("/DICE_ROLLING_SOUND.mp3");
+                tempAudio.play().catch(e => console.error("Temp audio playback error:", e));
+            }
+
             const program = getProgram(connection, anchorWallet);
-            const clientSeed = new BN(Math.floor(Math.random() * 1000000));
 
-            const VRF_PROGRAM_ID = new PublicKey("7wcvxgGZi6b651YUoVM51sbbGRdg14CDRjqkq4SSYwFA");
-            const SLOT_HASHES_PUBKEY = new PublicKey("SysvarS1otHashes111111111111111111111111111");
-            const INSTRUCTIONS_SYSVAR_ID = new PublicKey("Sysvar1nstructions1111111111111111111111111");
-            const VRF_IDENTITY = new PublicKey("9irBy75QS2BN81FUgXuHcjqceJJRuc9oDkAe8TKVvvAw");
-
-            // ... (in handleRoll)
-
-            const tx = await program.methods
-                .requestRoll(clientSeed)
+            const txSig = await program.methods
+                .requestRoll()
                 .accounts({
                     player: publicKey,
                     game: new PublicKey(gameId),
-                    oracleQueue: ORACLE_QUEUE_PUBKEY,
                     systemProgram: SystemProgram.programId,
                 } as any)
-                .remainingAccounts([
-                    { pubkey: VRF_PROGRAM_ID, isWritable: false, isSigner: false },
-                    { pubkey: SLOT_HASHES_PUBKEY, isWritable: false, isSigner: false },
-                    { pubkey: INSTRUCTIONS_SYSVAR_ID, isWritable: false, isSigner: false },
-                    { pubkey: VRF_IDENTITY, isWritable: false, isSigner: false }
-                ])
-                .rpc(); // Default: performs simulation (skipPreflight: false)
+                .rpc({ skipPreflight: true });
 
-            console.log("Roll Requested:", tx);
-            toast.success("Dice Roll Requested!");
-            // setDiceValue(0); // Reset or show animation?
+            console.log("Rolled Triggered:", txSig);
+
+            const latestBlockhash = await connection.getLatestBlockhash();
+            await connection.confirmTransaction({
+                blockhash: latestBlockhash.blockhash,
+                lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+                signature: txSig,
+            }, "confirmed");
+
+            // Fetch logs to get the dice value
+            const txDetails = await connection.getTransaction(txSig, { commitment: "confirmed", maxSupportedTransactionVersion: 0 });
+            const logs = txDetails?.meta?.logMessages || [];
+            const rollLog = logs.find(log => log.includes("Player rolled:"));
+            if (rollLog) {
+                const rolledValue = parseInt(rollLog.split("Player rolled: ")[1].trim());
+                setDiceValue(rolledValue);
+                toast.success(`You rolled a ${rolledValue}!`);
+            } else {
+                toast.success("Dice Rolled!");
+            }
+
         } catch (e: any) {
-            console.error("Roll Failed:", JSON.stringify(e, null, 2));
-            console.error("Roll error raw:", e);
-            toast.error("Roll failed: " + (e.message || "Unknown error"));
+            console.error("Roll Failed:", e);
+            toast.error("Roll failed: " + e.message);
         } finally {
             setIsLoading(false);
         }
@@ -313,14 +341,31 @@ export default function BoardPage() {
                             </div>
                         </div>
 
-                        {/* Dice Display - Monochrome */}
-                        {/* <div className="flex justify-center mb-10">
-                            <div className="w-24 h-24 bg-black rounded-2xl flex items-center justify-center border border-zinc-800 shadow-inner">
-                                <span className="text-5xl font-light text-white">
-                                    {diceValue > 0 ? diceValue : "-"}
-                                </span>
+                        {/* Pot Size Display */}
+                        {gameAccount && (
+                            <div className="text-center mb-10">
+                                <p className="text-zinc-500 text-xs font-medium uppercase tracking-[0.2em] mb-4">Current Pot</p>
+                                <div className="text-4xl font-light text-white flex items-center justify-center gap-2 font-mono">
+                                    <span className="text-emerald-400">◎</span>
+                                    <AnimatedCounter value={gameAccount.totalPot.toNumber() / 1e9} />
+                                </div>
                             </div>
-                        </div> */}
+                        )}
+
+                        {/* Dice Display - Monochrome */}
+                        <div className="flex justify-center mb-10">
+                            <motion.div
+                                key={diceValue}
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                className="w-24 h-24 bg-neutral-900 rounded-2xl flex items-center justify-center border border-white/10 shadow-[0_0_30px_rgba(255,255,255,0.05)] relative overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                                <span className="text-5xl font-light text-white z-10 font-mono">
+                                    {diceValue > 0 ? diceValue : "?"}
+                                </span>
+                            </motion.div>
+                        </div>
 
                         {/* Actions - Clean White/Black */}
                         <div className="grid grid-cols-2 gap-4">
@@ -350,6 +395,81 @@ export default function BoardPage() {
                 </div>
 
             </main>
+
+            {/* Game Over Overlay */}
+            <AnimatePresence>
+                {gameAccount?.finished && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            className="bg-neutral-900 border border-white/10 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl"
+                        >
+                            <h2 className="text-3xl font-bold text-white mb-2">Game Over!</h2>
+                            <p className="text-zinc-400 mb-6">The game has ended.</p>
+
+                            {gameAccount.winner && (
+                                <div className="mb-8">
+                                    <p className="text-xs uppercase tracking-widest text-zinc-500 mb-2">Winner</p>
+                                    <div className="text-emerald-400 font-mono text-lg break-all">
+                                        {gameAccount.winner.toString() === publicKey?.toString()
+                                            ? "You Won!"
+                                            : `${gameAccount.winner.toString().slice(0, 6)}...${gameAccount.winner.toString().slice(-4)}`
+                                        }
+                                    </div>
+                                    <div className="mt-2 text-2xl text-white font-mono">
+                                        {(gameAccount.totalPot.toNumber() / 1e9).toFixed(4)} SOL
+                                    </div>
+                                </div>
+                            )}
+
+                            {gameAccount.winner && publicKey && gameAccount.winner.toString() === publicKey.toString() ? (
+                                <Button
+                                    onClick={async () => {
+                                        try {
+                                            setIsLoading(true);
+                                            const program = getProgram(connection, anchorWallet);
+                                            const tx = await program.methods.claimPrize()
+                                                .accounts({
+                                                    winner: publicKey,
+                                                    game: new PublicKey(gameId),
+                                                    systemProgram: SystemProgram.programId,
+                                                } as any)
+                                                .rpc();
+                                            toast.success("Prize Claimed!");
+                                            console.log("Claimed:", tx);
+                                            // Redirect to game selection page to avoid account error
+                                            router.push("/game");
+                                        } catch (e: any) {
+                                            console.error(e);
+                                            toast.error("Claim Failed: " + e.message);
+                                        } finally {
+                                            setIsLoading(false);
+                                        }
+                                    }}
+                                    disabled={isLoading}
+                                    className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-lg rounded-xl"
+                                >
+                                    {isLoading ? <Loader2 className="animate-spin" /> : "Claim Prize"}
+                                </Button>
+                            ) : (
+                                <Button
+                                    onClick={() => router.push("/join")}
+                                    className="w-full bg-white/10 hover:bg-white/20 text-white"
+                                >
+                                    Back to Home
+                                </Button>
+                            )}
+
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

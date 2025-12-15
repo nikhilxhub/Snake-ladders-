@@ -2,12 +2,12 @@
  * Program IDL in camelCase format in order to be used in JS/TS.
  *
  * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/snake_ladders_program.json`.
+ * IDL can be found at `target/idl/ladders.json`.
  */
-export type SnakeLaddersProgram = {
-  "address": "aASgAk1s5KbAMPsiLTkeuA3k1ebTammftXpsP96QB3T",
+export type Ladders = {
+  "address": "AKyrBmNVw7iAjz9GJ5GkZui2UDtF1VBHnp82pqqvV7qb",
   "metadata": {
-    "name": "snakeLaddersProgram",
+    "name": "ladders",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
@@ -41,44 +41,6 @@ export type SnakeLaddersProgram = {
         }
       ],
       "args": []
-    },
-    {
-      "name": "consumeRandomness",
-      "discriminator": [
-        190,
-        217,
-        49,
-        162,
-        99,
-        26,
-        73,
-        234
-      ],
-      "accounts": [
-        {
-          "name": "vrfProgramIdentity",
-          "address": "9irBy75QS2BN81FUgXuHcjqceJJRuc9oDkAe8TKVvvAw"
-        },
-        {
-          "name": "game",
-          "writable": true
-        },
-        {
-          "name": "instructionsSysvar",
-          "address": "Sysvar1nstructions1111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "randomness",
-          "type": {
-            "array": [
-              "u8",
-              32
-            ]
-          }
-        }
-      ]
     },
     {
       "name": "createGame",
@@ -263,20 +225,11 @@ export type SnakeLaddersProgram = {
           "writable": true
         },
         {
-          "name": "oracleQueue",
-          "writable": true
-        },
-        {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "clientSeed",
-          "type": "u64"
-        }
-      ]
+      "args": []
     },
     {
       "name": "startGame",

@@ -11,8 +11,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Home, Menu, Trophy, Gamepad2, Plus, Wallet, Settings, LogOut, Copy, Check } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Home, Menu, Trophy, Gamepad2, Plus, Wallet, Settings, LogOut, Copy, Check, BookOpen } from "lucide-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { VerticalNav } from "@/components/ui/navbars";
@@ -53,6 +53,13 @@ export function FloatingNavbar() {
                     </Button>
                 </Link>
 
+                <Link href="/claim">
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
+                        <Trophy className="h-5 w-5" />
+                        <span className="sr-only">Claim Prize</span>
+                    </Button>
+                </Link>
+
                 {/* Play Button - Prominent */}
                 <Link href="/game">
                     <Button
@@ -63,6 +70,69 @@ export function FloatingNavbar() {
                         <span className="sr-only">Play</span>
                     </Button>
                 </Link>
+
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-white/10">
+                            <BookOpen className="h-5 w-5" />
+                            <span className="sr-only">How to Play</span>
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-[350px] bg-neutral-900 border-r border-white/10 text-white p-6 overflow-y-auto">
+                        <div className="space-y-6">
+                            <div>
+                                <SheetTitle className="text-2xl font-bold text-emerald-400 mb-2">How to Play</SheetTitle>
+                                <SheetDescription className="text-zinc-400 text-sm">Welcome to Web3 Snakes & Ladders!</SheetDescription>
+                            </div>
+
+                            <div className="space-y-4">
+                                <section>
+                                    <h3 className="flex items-center gap-2 font-semibold text-white mb-2">
+                                        <Gamepad2 className="w-4 h-4 text-emerald-500" />
+                                        Basics
+                                    </h3>
+                                    <ul className="list-disc list-inside text-zinc-400 text-sm space-y-1 ml-1">
+                                        <li>Join a game or create a new one.</li>
+                                        <li>Each game has an <strong>Entry Fee</strong> and <strong>Roll Fee</strong>.</li>
+                                        <li>Fees go into the <strong>Pot</strong>.</li>
+                                    </ul>
+                                </section>
+
+                                <section>
+                                    <h3 className="flex items-center gap-2 font-semibold text-white mb-2">
+                                        <Plus className="w-4 h-4 text-blue-500" />
+                                        Movement
+                                    </h3>
+                                    <ul className="list-disc list-inside text-zinc-400 text-sm space-y-1 ml-1">
+                                        <li>Roll the dice when it's your turn.</li>
+                                        <li><strong>Ladders</strong> boost you up! 🚀</li>
+                                        <li><strong>Snakes</strong> slide you down! 🐍</li>
+                                        <li>First to reach <strong>Tile 100</strong> wins!</li>
+                                    </ul>
+                                </section>
+
+                                <section>
+                                    <h3 className="flex items-center gap-2 font-semibold text-white mb-2">
+                                        <Trophy className="w-4 h-4 text-yellow-500" />
+                                        Winning
+                                    </h3>
+                                    <p className="text-zinc-400 text-sm">
+                                        The winner takes the <strong>Entire Pot</strong>!
+                                        Once the game ends, click "Claim Prize" to withdraw your winnings to your wallet.
+                                    </p>
+                                </section>
+                            </div>
+
+                            <div className="pt-4 border-t border-white/10">
+                                <p className="text-xs text-zinc-600 text-center">
+                                    Powered by Solana & Anchor
+                                </p>
+                            </div>
+                        </div>
+                    </SheetContent>
+                </Sheet>
+
+
 
                 {/* Wallet Button Refactored */}
                 {!connected ? (

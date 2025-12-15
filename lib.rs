@@ -4,11 +4,8 @@ use anchor_lang::solana_program::{
     sysvar::instructions as instructions_sysvar,
 };
 
-use ephemeral_vrf_sdk::instructions::{create_request_randomness_ix, RequestRandomnessParams};
-use ephemeral_vrf_sdk::types::SerializableAccountMeta;
-use ephemeral_vrf_sdk::consts;
+declare_id!("AKyrBmNVw7iAjz9GJ5GkZui2UDtF1VBHnp82pqqvV7qb");
 
-declare_id!("aASgAk1s5KbAMPsiLTkeuA3k1ebTammftXpsP96QB3T");
 
 pub const DEFAULT_WIN_POSITION: u8 = 100;
 pub const MAX_PLAYERS: usize = 8;
@@ -39,9 +36,10 @@ pub const GAME_ACCOUNT_SPACE: usize =
 
 
 #[program]
-pub mod snake_ladders_program {
+pub mod ladders {
     use super::*;
-    use anchor_lang::solana_program::program::invoke;
+    use anchor_lang::solana_program::program::{invoke, invoke_signed};
+    use std::str::FromStr;
 
     pub fn create_game(
         ctx: Context<CreateGame>,
@@ -159,33 +157,17 @@ pub mod snake_ladders_program {
         Ok(())
     }
 
-    // FIX: specific lifetime <'info> added to function and Context
-    pub fn request_roll<'info>(
-        ctx: Context<'_, '_, '_, 'info, RequestRoll<'info>>, 
-        client_seed: u64
-    ) -> Result<()> {
-        
-        // Read-only checks block
-        {
-            let game_read = &ctx.accounts.game;
-            require!(game_read.state == GameState::Started, ErrorCode::GameNotStarted);
-            require!(!game_read.finished, ErrorCode::GameFinished);
-            require!(game_read.players.len() > 0, ErrorCode::NoPlayers);
-            
-            let current_turn = game_read.current_turn_index as usize;
-            require!(current_turn < game_read.players.len(), ErrorCode::InvalidTurnIndex);
 
-            let caller = ctx.accounts.player.key();
-            let expected_player = game_read.players[current_turn];
-            require!(expected_player == caller, ErrorCode::NotYourTurn);
-        } 
+    pub fn request_roll(ctx: Context<RequestRoll>) -> Result<()> {
+        let player_key = ctx.accounts.player.key();
 
-        let caller = ctx.accounts.player.key();
-        let roll_fee = ctx.accounts.game.roll_fee_lamports;
-
-        // Roll Fee
-        if roll_fee > 0 {
-            let ix = system_instruction::transfer(&caller, &ctx.accounts.game.key(), roll_fee);
+        // 1. Transfer roll fee
+        if ctx.accounts.game.roll_fee_lamports > 0 {
+            let ix = system_instruction::transfer(
+                &player_key,
+                &ctx.accounts.game.key(),
+                ctx.accounts.game.roll_fee_lamports,
+            );
             invoke(
                 &ix,
                 &[
@@ -196,171 +178,67 @@ pub mod snake_ladders_program {
             )?;
         }
 
-        // Read lamports BEFORE borrowing game mutably
+        // Get updated pot balance
         let current_pot = **ctx.accounts.game.to_account_info().lamports.borrow();
 
         let game = &mut ctx.accounts.game;
-        game.total_pot = current_pot;
-        game.pending_player = Some(caller);
-        game.turn_nonce = game.turn_nonce.checked_add(1).ok_or(ErrorCode::NonceOverflow)?;
 
-        // Seed construction
-        let mut caller_seed: [u8; 32] = [0u8; 32];
-        caller_seed[..8].copy_from_slice(&client_seed.to_le_bytes());
-
-        msg!("Requesting randomness...");
-        
-        // Create the instruction
-        // We make it mutable so we can patch the signer flag if needed
-        let mut ix = create_request_randomness_ix(RequestRandomnessParams {
-            payer: ctx.accounts.player.key(),
-            oracle_queue: ctx.accounts.oracle_queue.key(),
-            callback_program_id: ID,
-            callback_discriminator: crate::instruction::ConsumeRandomness::DISCRIMINATOR.to_vec(),
-            caller_seed,
-            accounts_metas: Some(vec![SerializableAccountMeta {
-                pubkey: ctx.accounts.game.key(),
-                is_signer: false,
-                is_writable: true,
-            }]),
-            ..Default::default()
-        });
-
-        // FIX: The SDK seems to incorrectly set the Program ID as a signer.
-        // The SDK constant might be different from the Devnet address 7wcv..., so we check specifically for it or index 1.
-        // Log the constant for debugging purposes
-        msg!("SDK Constant VRF ID: {:?}", consts::VRF_PROGRAM_IDENTITY);
-        
-        let target_vrf = "7wcvxgGZi6b651YUoVM51sbbGRdg14CDRjqkq4SSYwFA";
-        if let Some(acc_meta) = ix.accounts.iter_mut().find(|acc| acc.pubkey.to_string() == target_vrf) {
-            msg!("Patching VRF Program ID (7wcv...) signer flag to false");
-            acc_meta.is_signer = false;
-        } else {
-             msg!("WARNING: Could not find VRF account to patch. Checking index 1 fallback.");
-             if ix.accounts.len() > 1 {
-                 if ix.accounts[1].is_signer {
-                     msg!("Patching Index 1 signer flag to false (Fallback)");
-                     ix.accounts[1].is_signer = false;
-                 }
-             }
-        }
-
-        // FIX 2: Overwrite the Program ID because the SDK defaults to Mainnet/Other ID
-        if let Ok(p) = Pubkey::from_str(target_vrf) {
-            msg!("Patching Instruction Program ID to {}", p);
-            ix.program_id = p;
-        } else {
-             msg!("Failed to parse target VRF pubkey");
-        }
-
-        // DEBUG: Print all accounts expected by the instruction (Again to verify)
-        for (i, acc) in ix.accounts.iter().enumerate() {
-            msg!("IX Acc {}: {:?} is_signer: {} is_writable: {}", i, acc.pubkey, acc.is_signer, acc.is_writable);
-        }
-        msg!("IX Program ID: {:?}", ix.program_id);
-
-        // Combine accounts
-        // Because of the signature change above, Rust now knows these all share the 'info lifetime
-        let mut cpi_accounts = vec![
-            ctx.accounts.player.to_account_info(),
-            ctx.accounts.oracle_queue.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-            ctx.accounts.game.to_account_info(), 
-        ];
-        cpi_accounts.extend(ctx.remaining_accounts.iter().cloned());
-
-        // DEBUG: Verify cpi_accounts contains the program_id
-        msg!("CPI Accounts provided to invoke:");
-        let mut found_program = false;
-        for (i, acc) in cpi_accounts.iter().enumerate() {
-            msg!("CPI Acc {}: {:?}", i, acc.key());
-            if acc.key() == &ix.program_id {
-                found_program = true;
-                msg!("  -> MATCHES ix.program_id! Executable: {}", acc.executable);
-            }
-        }
-        if !found_program {
-            msg!("CRITICAL: ix.program_id {:?} NOT found in cpi_accounts!", ix.program_id);
-        }
-
-        invoke(
-            &ix,
-            &cpi_accounts,
-        )?;
-
-        Ok(())
-    }
-
-    pub fn consume_randomness(ctx: Context<ConsumeRandomness>, randomness: [u8; 32]) -> Result<()> {
-        // FIX 4: Prefix unused variable with _ to silence warning
-        let _ix_account_info = &ctx.accounts.instructions_sysvar;
-        
-        // Security check
-        require_keys_eq!(ctx.accounts.vrf_program_identity.key(), consts::VRF_PROGRAM_IDENTITY, ErrorCode::InvalidVrfProgram);
-
-        let game = &mut ctx.accounts.game;
-
+        // 2. Validation
         require!(game.state == GameState::Started, ErrorCode::GameNotStarted);
         require!(!game.finished, ErrorCode::GameFinished);
+        require!(
+            game.players[game.current_turn_index as usize] == player_key,
+            ErrorCode::NotYourTurn
+        );
 
-        // 1. Generate Dice Value (1-6)
-        let random_byte = randomness[0];
-        let dice_value = (random_byte % 6) + 1; 
+        // Update pot
+        game.total_pot = current_pot;
 
-        msg!("VRF Callback received! Rolled: {}", dice_value);
+        // 3. Generate Random Number (Pseudo-random)
+        // Using clock and slot for randomness as requested (simulating client-side simplicity)
+        let clock = Clock::get()?;
+        let seed = clock.unix_timestamp
+            .wrapping_add(clock.slot as i64)
+            .wrapping_add(game.turn_nonce as i64);
+        let roll = ((seed % 6).abs() + 1) as u8;
 
-        // 2. Identify Player
-        let player_pubkey = game.pending_player.ok_or(ErrorCode::MoverMismatch)?;
-        let idx = game.players.iter().position(|p| p == &player_pubkey).ok_or(ErrorCode::InvalidMover)?;
+        msg!("Player rolled: {}", roll);
 
-        // 3. Move Logic
-        let current_pos_u16 = game.positions[idx] as u16;
-        let proposed = current_pos_u16 + dice_value as u16;
+        // 4. Update Position
+        let current_pos_idx = game.current_turn_index as usize;
+        let mut new_pos = game.positions[current_pos_idx] + roll;
 
-        // Exact Win Check
-        if proposed == game.win_position as u16 {
-            game.positions[idx] = game.win_position;
-            game.finished = true;
-            game.state = GameState::Finished;
-            game.winner = Some(player_pubkey);
-            game.pending_player = None;
-            msg!("Game Won by {:?}", player_pubkey);
-            return Ok(());
-        }
-
-        // Overshot Check
-        if proposed > game.win_position as u16 {
-            msg!("Overshot! Stay at {}", current_pos_u16);
-            game.pending_player = None;
-            // Advance turn
-            if !game.players.is_empty() {
-                game.current_turn_index = ((game.current_turn_index as usize + 1) % game.players.len()) as u8;
-            }
-            return Ok(());
-        }
-
-        // Apply Snakes/Ladders
-        let mut new_pos = proposed as u8;
-        for i in 0..(game.map_len as usize) {
+        // Handle Snakes and Ladders
+        for i in 0..game.map_len as usize {
             if game.map_from[i] == new_pos {
-                let to = game.map_to[i];
-                msg!("Hit a snake/ladder! Moved from {} to {}", new_pos, to);
-                new_pos = to;
+                msg!("Landed on snake/ladder! Moving from {} to {}", new_pos, game.map_to[i]);
+                new_pos = game.map_to[i];
                 break;
             }
         }
 
-        game.positions[idx] = new_pos;
-        msg!("Player {:?} moved to {}", player_pubkey, new_pos);
-
-        // Advance Turn
-        game.pending_player = None;
-        if !game.players.is_empty() {
-            game.current_turn_index = ((game.current_turn_index as usize + 1) % game.players.len()) as u8;
+        // Check Win Condition
+        if new_pos >= game.win_position {
+            new_pos = game.win_position;
+            game.finished = true;
+            game.winner = Some(player_key);
+            game.state = GameState::Finished;
+            msg!("Player {} wins!", player_key);
         }
+
+        game.positions[current_pos_idx] = new_pos;
+
+        // 5. Advance Turn
+        if !game.finished {
+            game.current_turn_index = (game.current_turn_index + 1) % (game.players.len() as u8);
+        }
+        
+        game.turn_nonce = game.turn_nonce.wrapping_add(1);
 
         Ok(())
     }
+
+
 
     pub fn pass_turn(ctx: Context<PassTurn>) -> Result<()> {
         let game = &mut ctx.accounts.game;
@@ -524,29 +402,16 @@ pub struct RequestRoll<'info> {
     #[account(mut)]
     pub player: Signer<'info>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [b"game", game.creator.key().as_ref(), &game.game_id],
+        bump = game.bump
+    )]
     pub game: Account<'info, Game>,
-
-    /// CHECK: The oracle queue account (MagicBlock specific)
-    #[account(mut)]
-    pub oracle_queue: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
 }
 
-#[derive(Accounts)]
-pub struct ConsumeRandomness<'info> {
-    /// CHECK: This account MUST match the MagicBlock VRF Program ID.
-    #[account(address = consts::VRF_PROGRAM_IDENTITY)]
-    pub vrf_program_identity: AccountInfo<'info>,
-
-    #[account(mut)]
-    pub game: Account<'info, Game>,
-    
-    /// CHECK: Required for sysvar introspection to verify CPI caller
-    #[account(address = anchor_lang::solana_program::sysvar::instructions::ID)]
-    pub instructions_sysvar: AccountInfo<'info>,
-}
 
 #[derive(Accounts)]
 pub struct ClaimPrize<'info> {
