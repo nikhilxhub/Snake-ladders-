@@ -1,13 +1,10 @@
-Got it 👍 — your draft just needs some cleanup in formatting and section consistency so it reads smoothly as a proper **README.md**. Here’s the corrected and polished version:
-
-```markdown
 # 🎲 Stake & Ladderss
 
 A decentralized multiplayer **Snake & Ladders-inspired game** built on **Solana Anchor** with a **Next.js frontend**.  
 Players stake entry fees, pay per dice roll, and compete to reach block 100 first — winner takes the pot!
 
 ---
-
+<video src="stakeladders.mp4" controls></video>
 ## 🚀 Features
 
 - **Room Creation**  
