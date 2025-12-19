@@ -19,6 +19,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
+
 const MOCK_PLAYERS = [
   {
     address: "8KXTG...vRFy",

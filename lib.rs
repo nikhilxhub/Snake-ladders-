@@ -208,22 +208,26 @@ pub mod ladders {
         let current_pos_idx = game.current_turn_index as usize;
         let mut new_pos = game.positions[current_pos_idx] + roll;
 
-        // Handle Snakes and Ladders
-        for i in 0..game.map_len as usize {
-            if game.map_from[i] == new_pos {
-                msg!("Landed on snake/ladder! Moving from {} to {}", new_pos, game.map_to[i]);
-                new_pos = game.map_to[i];
-                break;
+        if new_pos > game.win_position {
+            msg!("Rolled too high! Staying at current position.");
+            new_pos = game.positions[current_pos_idx];
+        } else {
+            // Handle Snakes and Ladders
+            for i in 0..game.map_len as usize {
+                if game.map_from[i] == new_pos {
+                    msg!("Landed on snake/ladder! Moving from {} to {}", new_pos, game.map_to[i]);
+                    new_pos = game.map_to[i];
+                    break;
+                }
             }
-        }
 
-        // Check Win Condition
-        if new_pos >= game.win_position {
-            new_pos = game.win_position;
-            game.finished = true;
-            game.winner = Some(player_key);
-            game.state = GameState::Finished;
-            msg!("Player {} wins!", player_key);
+            // Check Win Condition
+            if new_pos == game.win_position {
+                game.finished = true;
+                game.winner = Some(player_key);
+                game.state = GameState::Finished;
+                msg!("Player {} wins!", player_key);
+            }
         }
 
         game.positions[current_pos_idx] = new_pos;
