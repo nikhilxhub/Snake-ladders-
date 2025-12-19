@@ -4,7 +4,7 @@ A decentralized multiplayer **Snake & Ladders-inspired game** built on **Solana 
 Players stake entry fees, pay per dice roll, and compete to reach block 100 first — winner takes the pot!
 
 ---
-<video src="stakeladders.mp4" controls></video>
+![Stake Ladders Demo](./stakeladders.mp4)
 ## 🚀 Features
 
 - **Room Creation**  
